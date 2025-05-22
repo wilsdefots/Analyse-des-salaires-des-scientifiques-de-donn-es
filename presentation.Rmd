@@ -1,0 +1,634 @@
+---
+title: "Analyse des  salaires des scientifiques de données en 2024"
+subtitle: " Facteurs qui influencent leur rémunérations "
+author:  " Wilson FOTSING , Coumba Diop , Anais Nikiema, Blaise-Pascal Guibony " 
+institute: "UQAC"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    lib_dir: libs
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+
+
+```{r load-packages, include = FALSE}
+# Chargement des bibliothèques nécessaires pour l'analyse
+#install.packages("xaringanExtra")
+#install.packages("xaringanthemer")
+ #install.packages("caret")
+#install.packages("yardstick")
+library(tidyverse)    # Manipulation et visualisation des données
+library(tidymodels)     # Modèles statistiques
+library(palmerpenguins)
+library(knitr)          # Génération de rapports
+library(xaringanthemer)
+library(gridExtra)      #Pour la juxtaposition des graphiques
+library(forcats)        # Manipulation des facteurs
+library(RColorBrewer)   # Palettes de couleurs
+library(ggplot2)
+library(naniar)
+library(recipes)
+library(caret)
+library(yardstick)
+```
+
+```{r setup, include=FALSE}
+# Pour une meilleure résolution de figure
+knitr::opts_chunk$set(fig.retina = 3, dpi = 300, fig.width = 6, fig.asp = 0.618, out.width = "80%", warning = FALSE, message = FALSE)
+style_xaringan (
+  title_slide_background_image = "img/data2.jpg"
+)
+```
+
+```{r load-data, include=FALSE}
+# Charger vos données ici
+salaires <- read.csv("../data/DataScience_salaries_2024.csv")
+```
+
+
+class: center, middle
+
+## Objectif général 
+
+---
+class: reverse, center, middle
+<span style="color: blue; font-size: 36px;">
+     L’objectif principal est d'analyser les parcours en science des données, et informer sur les salaires pour guider les futurs professionnels du domaine.
+</span>
+
+---
+
+**Plus concrètement, nous tenterons de répondre aux questions suivantes :**
+
+- Quels sont les facteurs qui influencent les salaires des
+  scientifiques des données en 2024. on explorera l'impact des variables telles que l'expérience ou la localisation,
+  le type d'emploi, la taille de l'entreprise et le ratio de télétravai. 
+
+
+- Quels sont les domaines les mieux rémunérés dans le secteur de la science des données ?
+
+
+- Comment les salaires des scientifiques des données évoluent-ils en fonction de l'expérience 
+   professionnelle et des années ?
+
+
+
+- Quel est l'impact des différents types d'emploi et de la taille des entreprises sur la 
+  rémunération des scientifiques des données ?
+
+
+
+- Dans quelle mesure la localisation (pays ou région) et le ratio de télétravail 
+  influencent-ils les salaires dans le domaine de la science des données ?
+
+
+
+---
+
+class: reverse, center, middle
+      
+## À propos des données
+
+---
+
+class: reverse, center, middle
+
+**l’auteur**
+
+Le jeu de donnée utilisé pour cette étude se nomme
+**“DataScience_salaries_2024”.** il est disponible via le lien suivant :
+
+*<https://www.kaggle.com/datasets/yusufdelikkaya/datascience-salaries-2024?select=DataScience_salaries_2024.csv>*
+
+Il a été publié dans le site le 23 aout 2024 par le scientifique des
+données Yusuf Delikkaya. Nous les avons extraites le 29 aout 2024, soit 6 jours
+seulement après sa publication, mais on comptait déjà 5076 vues et 1301
+téléchargements : ce qui montre l’intérêt que les gens portent sur le
+salaire des scientifiques de données et, la pertinence de notre étude.
+
+---
+
+class: center, middle
+
+##  Description
+
+---
+
+class:  center, middle
+
+**Le paragraphe qui suit a été inspiré de la page de l’auteur.**
+
+L’ensemble de données utilisé dans cette analyse comprend des données
+anonymisées sur les emplois en science des données.
+
+
+- Il pourra aider à comparer les salaires, à comprendre l’impact de
+facteurs tels que le niveau d’expérience et la taille de l’entreprise
+sur la rémunération, et à éclairer les décisions de carrière dans le
+domaine de la science des données.
+
+---
+class:  center, middle
+
+<span style="color: blue; font-size: 36px;">
+     **le nombre d’enregistrements**
+</span>
+
+```{r description-donnees, include=FALSE}
+salaires %>%
+  nrow()
+salaires %>%
+  ncol()
+
+```
+
+Le jeu de données comprend  **`r nrow(salaires)`** enregistrements collectés à partir de
+diverses sources, notamment des enquêtes, des offres d’emploi et des
+archives publiques.
+
+
+<span style="color: blue; font-size: 20px;">
+      **Les variables**
+</span>
+
+
+
+ 
+La base de données utilisée dans cette étude contient **`r ncol(salaires)`** variables, chacune fournissant des informations essentielles sur les salaires des scientifiques de données. La  description de ces variables est disponible dans le module proposition, en annexe à ce document.
+
+
+ Ces variables offrent une perspective détaillée pour explorer les facteurs influençant les salaires des scientifiques de données et leur répartition dans différents contextes professionnels.
+
+
+
+---
+
+class: center, middle 
+ 
+## Analyse exploratoire des données
+
+---
+
+
+```{r valeurs-manquantes,include= FALSE}
+if (anyNA(salaires) == FALSE) {
+#  print("La base des données n'a pas de valeurs manquantes, \n donc les données sont assez nettoyées. On va directement commencer notre étude.")
+} else {
+  # Suppression des lignes ayant des valeurs manquantes dans la base 'salaires'
+  salaires <- salaires[complete.cases(salaires), ]
+#  print("Les lignes contenant des valeurs manquantes ont été supprimées.")
+}
+```
+
+```{r Visualisation des valeurs manquantes, echo=FALSE}
+# Visualisation des valeurs manquantes
+#gg_miss_var(salaires) +
+#  labs(title = "Valeurs manquantes dans les données")
+```
+
+
+
+
+class: reverse, center, middle
+<span style="color: blue;">
+Nombre de professions recencées dans le cadre de notre étude : *`r length(unique(salaires$job_title))`*
+</span>
+ 
+
+
+---
+
+### Visualisation de la distribution des salaires
+
+```{r Visualisation-des-salaires, echo=FALSE}
+# Calcul des salaires médians
+salaires_medians <- salaires %>%
+  group_by(job_title) %>%
+  summarise(salaire_median = median(salary_in_usd, na.rm = TRUE)) %>%
+  arrange(desc(salaire_median))%>%
+  mutate(  job_title = case_when(
+           job_title == 'Analytics Engineering Manager' ~ 'Analytics Eng. Manager',
+           job_title == 'Managing Director Data Science' ~'Man. Dir. Datas science',
+           #job_title =='Quantitative Research Analyst' ~ 'Quantitative Research Analyst',
+           TRUE ~ job_title)
+         )
+
+# ------------------Les 20 métiers les plus lucratifs -------------------------------
+p1 <- ggplot(salaires_medians %>% head(10), 
+             aes(
+               y = fct_reorder(job_title, salaire_median), 
+               x = salaire_median / 1000
+             )) +
+  geom_bar(stat = "identity", position = "stack", fill = gray(0.3)) +
+  labs(
+    title = "Top 10",
+    x = " ",
+    y = "Professions"
+  ) +
+  theme_minimal()
+
+# ------------------Les 20 métiers les moins lucratifs -------------------------------
+p2 <- ggplot(salaires_medians %>% tail(10), 
+             aes(
+               y = fct_reorder(job_title, salaire_median), 
+               x = salaire_median / 1000
+             )) +
+  geom_bar(stat = "identity", position = "stack", fill = gray(0.7)) +
+  labs(
+    title = "Top -10",
+    x = " ",
+    y = " "
+  ) +
+  theme_minimal()
+
+# ---------------------------------- Construction ----------------------------------
+grid.arrange(p1, p2, ncol = 2,  top=("distribution des salaires medians des scientifique de données"),
+             bottom = "salaire median(en milliers de $)")
+```
+
+---
+### Répartition des salaires
+
+```{r Répartition-des-salaires-en-USD, echo=FALSE}
+
+# Boxplot
+ggplot(data = salaires, aes(x = salary_in_usd)) +
+ geom_boxplot(fill = "skyblue", color = "darkblue") +
+ labs(
+   title = "Répartition des salaires en USD",
+   x = "Salaire (USD)"
+ ) +
+ coord_cartesian(ylim = c(-1, 1)) +
+ scale_x_continuous(
+   breaks = seq(0, max(salaires$salary_in_usd), by = 100000),
+   labels = label_number(big.mark = " "))+
+ theme_minimal()
+```
+
+---
+ <span style="color: blue; font-size: 26px; text-align: center; display: block;">
+      **interprétation :**
+</span>
+
+
+
+Le salaire median avoisine les 150 000 $  avec une longue queue portée vers la droite. Ce qui signifie que les tendances salariales sont plutot bonnes dans le métier. 
+
+
+On observe aussi plusieurs valeurs abérantes supérieures à 300 000$, et allant jusqu'à 800 000 $. Ceci correspond à des postes de managers plus expérimentés tels que  Analytics Engineering Manager. 
+
+
+Par ailleurs, on remarque aussi quelques salaires très bas allant jusau'à 15 000$/an, ces salaires correspondent au employées résidant en Asie (Philipines, Inde, Thailande...) ou en Afrique (Ghana...). Ceci ne signifie pas necessairement qu'ils sont moins payés, mais ca pourrait avoir lien avec le coût de vie et le taux de change de la monnaie locale en dollars.
+
+---
+
+
+
+### Répartition des types d'emploi
+
+.pull-left[
+```{r repartition-type-emploi, warning=FALSE, out.width="100%", fig.width=6, echo=FALSE}
+employment_counts <- salaires %>%
+  count(employment_type) %>%
+  mutate(perc = n / sum(n) * 100, 
+         label = paste(employment_type, "(", round(perc, 1), "%)", sep = ""))  # Créer un label avec le pourcentage
+
+#--------------------------------------------------------------------------------------------------
+
+ggplot(data = employment_counts, aes(x = "", y = perc, fill = employment_type)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  labs(
+    title = "Répartition des types d'emploi",
+    fill = "Type d'emploi"
+  ) +
+  scale_fill_manual(values = RColorBrewer::brewer.pal(n = length(unique(employment_counts$employment_type)), name = "Set3"), 
+                    labels = employment_counts$label) +  
+  scale_color_viridis_d()+
+  theme_void()
+
+```
+]
+
+.pull-right[
+
+- On remarque que la quasi-totalité des emplois sont des temps pleins. 
+
+- Ce qui  témoigne que lesemplois dans le domaine des sciences de données sont  stables.
+ 
+Ceci ne vient que confirmer ce qui vient d'être dit à ce sujet
+
+]
+
+
+
+---
+
+```{r salaire-moyens-par-an,echo=FALSE}
+salaires_annuel <- salaires %>%
+  group_by(work_year) %>%
+  summarise(salaire_moyen = mean(salary_in_usd))
+
+ggplot(salaires_annuel, aes(x = work_year, y = salaire_moyen)) +
+  geom_point(color = "steelblue", size = 3) +  # Points personnalisés
+  geom_smooth(method = "loess", color = "darkblue", se = FALSE, linetype = "solid") +  # Courbe lissée
+  labs(
+    title = "Évolution du salaire moyen par année",
+    x = "Année",
+    y = "Salaire moyen (en USD)"
+  ) +
+  theme_minimal() +  # Style épuré
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),  # Centrer le titre
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14)
+  )
+
+```
+
+
+---
+<span style="color: blue; font-size: 26px; text-align: center; display: block;">
+      **interprétation :**
+</span>
+
+La baisse des salaires en sciences des données en 2024 et dans les années à venir pourrait être attribuée à plusieurs facteurs tels que :
+
+La baisse des salaires en science des données pourrait s'expliquer par la saturation du marché, l'automatisation, la concurrence mondiale, et des facteurs économiques comme la récession, réduisant la demande pour ces compétences.
+
+---
+
+
+class:  middle, center
+
+## Regression logistique 
+
+---
+
+
+```{r courbe-de-regression-logistique, echo=FALSE}
+ggplot(salaires, aes(x = work_year, y = salary_in_usd/1000)) +
+  geom_jitter(aes(color = salary_in_usd/1000 > 150), width = 0.1) +  
+  geom_hline(yintercept = 200, color = "darkred", linetype = "dashed") + 
+  annotate("text", x = 2025, y = 200, label = "y=150", color = "darkred", size = 5, vjust = -1) +  # Ajouter le texte
+  labs(
+    title = "Salaire moyen par année",
+    x = "Année",
+    y = "Salaire (en milliers de USD)"
+  ) +
+  scale_color_manual(values = c("TRUE" = grey(0.2), "FALSE" = grey(0.8))) +  
+  guides(color = "none") +
+  theme_minimal()
+
+```
+
+
+
+```{r ingenieurie-des-caracteristiques, include=FALSE}
+#Ce code est entierement adapté à partir du code vu dans le cours, ce n'est pas notre travail personnel
+#prepare la colone à etudier (Ajout)
+salaires$sup150 = as.factor(ifelse(salaires$salary_in_usd>150000,'yes','no'))
+ #on divise le jeu de données en ensembles d'entrainement et de test
+set.seed(16122024) # pour la reproductibilité du code
+salaires_split <- initial_split(salaires, prop = 0.80) 
+train_data <- training(salaires_split) #représente 80% du jeu de données
+test_data  <- testing(salaires_split)
+#--------------------------------------------------------------------------------------------------------
+#construction de la recette
+salaires_rec <- recipe(sup150~., data = train_data) 
+#summary(salaires_rec)
+#on supprime maintenant certaines colonnes pour ne rester qu'avec des classes de colinéarité
+#colnames(salaires) pour avoir la liste des noms de colonnes
+salaires_rec <- salaires_rec %>%
+  step_rm(salary,salary_currency,salary_in_usd)%>%
+ step_dummy(all_nominal(), -all_outcomes()) #pour convertir les categories en variables factices
+#toutes les variables restantes sont catégorielle-->aucune variable numerique a discretiser
+#--------------------------------------------------------------------------------------------------------
+#Construction du flux de travail (Workflow)
+salaires_mod <- logistic_reg() %>%
+  set_engine("glm")
+
+salaires_wflow <-workflow()%>%
+  add_model(salaires_mod)%>%
+  add_recipe(salaires_rec)
+
+salaires_fit <- salaires_wflow %>%
+  fit(data = train_data)
+#affichage
+#salaires_fit %>%
+ # tidy()%>%
+  #kable()%>%
+  #head(10) #%>%
+ # print()
+    
+```
+
+
+
+
+
+---
+
+## Prédictions
+
+
+```{r predictions-salaires, echo=FALSE}
+salaires_pred <- predict(salaires_fit, test_data, type = "prob") %>%
+  bind_cols(test_data) 
+#salaires_pred
+##evaluer la performence
+
+##Decision
+
+cutoff_prob <- 0.5
+
+tableau <- salaires_pred %>%  
+  mutate(
+    sup150 = if_else(sup150 == "yes", ">150", "<=150"),
+    sup150_pred = if_else(.pred_yes > cutoff_prob, "etiqueté comme >150", 
+                          "etiqueté comme <=150")
+  ) %>%
+  drop_na(sup150_pred, sup150) %>%  # Supprime les lignes contenant des NA dans ces colonnes
+  count(sup150_pred, sup150) %>% 
+  pivot_wider(names_from = sup150, values_from = n, values_fill = 0) %>% # Remplit les valeurs manquantes par 0
+  mutate(
+    Total = `<=150` + `>150`  # Calcul des totaux par ligne
+  ) %>%
+  bind_rows(
+    summarise(., across(where(is.numeric), sum), sup150_pred = "Total") # Ajout des totaux par colonne
+  ) %>%
+  kable(col.names = c(" ", "salaire <= 150000", "salaire > 150000", "Total"), 
+        caption = "Tableau avec totaux")
+#affichage des colonnes utilisées
+
+salaires_temp <- salaires[, !(colnames(salaires) %in% c("salary_currency", "salary_in_usd","salary"))]
+colnames(salaires_temp)%>%
+  kable()
+
+```
+
+
+<span style="color: blue; font-size: 26px; text-align: center; display: block;">
+       La variable cible est sup150 
+</span>
+
+---
+<span style="color: blue; font-size: 26px; text-align: center; display: block;">
+      **Courbe ROC** 
+</span>
+
+```{r courbe-roc, echo=FALSE}
+salaires_pred %>% 
+  roc_curve(truth = sup150,    
+            .pred_yes,    
+            event_level = "second"  ) %>% 
+  autoplot()
+
+
+```
+
+
+
+```{r matrice-confusion, echo=FALSE}
+#------------------------------------------------------------------------------------------------
+#matrice de confusion
+
+salaires_pred <- salaires_pred %>%
+  mutate(pred_class = as.factor(ifelse(.pred_yes > cutoff_prob, "yes", "no")))
+
+salaires_pred$pred_class <- factor(salaires_pred$pred_class, levels = c("yes", "no"))
+salaires_pred$sup150 <- factor(salaires_pred$sup150, levels = c("yes", "no"))
+
+cm <- confusionMatrix(salaires_pred$pred_class, salaires_pred$sup150)
+# Évaluer les métriques sur le jeu de test
+metrics_result <- metrics(salaires_pred, truth = sup150, estimate = pred_class)
+
+# Affichage du résultat
+#print(metrics_result)
+
+#metrics_result$.estimate[2]
+
+```
+---
+
+<span style="color: blue; font-size: 26px; text-align: center; display: block;">
+      **Sensibilité et spécificité :**
+</span>
+
+La valeur de la **probabilité de cutoff** sélectionnée est p=0.5
+
+- La **sensibilité** de ce modele est : `r metrics_result$.estimate[1]` 
+
+- Ce résultat suggère que notre modèle capture environ `r round(metrics_result$.estimate[1],4)*100`% de vrais 
+positifs.En d'autres termes, dans `r round(metrics_result$.estimate[1],2) *100`% de cas, on a dit que le salaire 
+etait supérieur à 150000$ alors qu'il ne l'était pas. Le taux d'erreur est quand même assez elevé.
+
+
+- La **spécificité** est : `r metrics_result$.estimate[2]`. ce qui indique  que le modèle a une très mauvaise capacité à identifier les cas négatifs.
+
+
+- On voit qu'il est trop risqué d'utiliser une regression logistique pour ces données. C'est pourquoi on a pensé 
+à l'approche par apprentissage non supervisé.
+
+---
+
+## Apprentissage non supervisé
+
+
+```{r Standardisation,echo=FALSE}
+# Sélectionner les variables pertinentes pour le clustering
+salaires_cleaned <- salaires %>%
+  select(salary_in_usd, work_year) %>%
+  scale()  # Normaliser les données
+
+```
+
+
+```{r Appliquer le K-means clustering, echo=FALSE}
+# Appliquer le K-means clustering
+set.seed(123)  # Pour la reproductibilité
+kmeans_model <- kmeans(salaires_cleaned, centers = 3)  # on choisit k = 3 
+
+# Résultats du clustering
+#kmeans_model$centers  # Afficher les centres des clusters
+#kmeans_model$cluster  # Afficher les clusters pour chaque observation
+```
+
+---
+
+.pull-left[
+### Méthode du coude :
+```{r Methode du coude, echo=FALSE}
+# Méthode du coude
+wss <- numeric(15)  # Calculer la somme des carrés pour k = 1 à 15
+for (k in 1:15) {
+  wss[k] <- sum(kmeans(salaires_cleaned, centers = k)$withinss)
+}
+
+# Tracer la courbe du coude
+plot(1:15, wss, type = "b", pch = 19, frame = FALSE, 
+     xlab = "Nombre de clusters", ylab = "Somme des carrés intra-cluster")
+
+```
+]
+.pull-right[
+- Le coude semble se situer autour de k = 3.
+
+- Cela suggère que 3 clusters seraient un choix raisonnable pour segmenter les données.
+]
+---
+
+### Clustering des salaires :
+```{r clustering, echo=FALSE}
+# Ajouter les résultats du clustering au dataframe
+salaires$cluster <- as.factor(kmeans_model$cluster)
+
+# Visualiser les clusters
+
+ggplot(salaires, aes(x = work_year, y = salary_in_usd, color = cluster)) +
+  geom_point() +
+  labs(
+    title = "Clustering des salaires en fonction de l'année",
+    x = "Année",
+    y = "Salaire (USD)"
+  ) +
+  theme_minimal()
+```
+
+---
+
+Les salaires des scientifiques de données sont répartis en trois clusters :
+
+
+- Cluster 1 (rouge) : Salaires élevés
+
+
+- Cluster 2 (vert) : Salaires bas
+
+
+- Cluster 3 (bleu) : Salaires intermédiaires (apparus en 2024)
+
+- Cela pourrait indiquer un changement dans le marché du travail, comme l’entrée d’un plus grand nombre de débutants ou un impact économique qui réduit certains salaires.
+
+---
+
+<span style="color: blue; font-size: 26px; text-align: center; display: block;">
+      **Conclusion :**
+</span>
+
+--
+
+L’analyse des données salariales des scientifiques des données entre 2020 et 2024 a révélé une polarisation croissante des salaires. Trois groupes distincts ont été identifiés grâce au clustering : un segment de salaires élevés en forte croissance à partir de 2023, un segment stable de salaires moyens représentant la majorité des professionnels, et l’apparition de salaires plus bas en 2024, possiblement liée à l’entrée de nouveaux candidats sur le marché ou à des pressions économiques. Ces résultats mettent en lumière l’évolution dynamique du marché de l’emploi en science des données, soulignant la nécessité d’une adaptation continue aux exigences du secteur et aux avancées technologiques pour rester compétitif.
+
+
+
+
+
+
+
