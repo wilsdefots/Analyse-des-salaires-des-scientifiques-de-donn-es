@@ -1,0 +1,152 @@
+---
+title: "extra"
+author: "Wilson FOTSING"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+class:  middle, center
+## Tests d'hypothèses
+
+---
+
+### Hypothèse 1 : Salaire moyen en Amérique du Nord
+
+
+### Test : Salaire moyen des employés en Amérique du Nord versus les autres
+
+Nous avons effectué un **test t unilatéral** pour tester si les employés en Amérique du Nord ont un salaire moyen plus élevé que ceux des autres régions.
+
+```{r test, echo=FALSE}
+# Diviser les données en deux groupes : Amérique du Nord (US et CA) et autres régions
+na_group <- subset(salaires, company_location %in% c("US", "CA"))  # Ajuste si nécessaire
+other_group <- subset(salaires, !(company_location %in% c("US", "CA")))
+
+# Test t unilatéral pour la comparaison des salaires
+t_test_na_salary <- t.test(na_group$salary_in_usd, other_group$salary_in_usd, alternative = "greater")
+
+# Résultats du test
+#t_test_na_salary
+
+```
+
+---
+
+###Résultats :
+
+- t = 44.192
+
+
+- p-value = 2.2e-16
+  
+
+- Moyenne des salaires :
+
+
+- Amérique du Nord : 157051.32 USD
+
+
+- Autres régions : 84660.84 USD
+        
+Le p-value étant très faible (< 2.2e-16), nous rejetons l'hypothèse nulle. On a assez de preuves statistiques 
+pour conclure avec 5% de chances de se tromper qu'il y a une différence significative et l'Amérique du Nord a un salaire moyen plus élevé.
+
+---
+### Hypothèse 2 : Salaire moyen en télétravail vs non télétravail
+
+####Test : Salaire moyen des employés en télétravail comparé à ceux sans télétravail
+
+Nous avons réalisé un test t bilatéral pour comparer le salaire moyen entre les employés en télétravail et ceux ne travaillant pas à distance.
+
+```{r divese, echo=FALSE}
+# Diviser les données en deux groupes : télétravail et non télétravail
+remote_group <- subset(salaires, remote_ratio == 100)  # Télétravail à 100%
+non_remote_group <- subset(salaires, remote_ratio != 100)  # Non télétravail ou télétravail partiel
+
+# Test t bilatéral pour la comparaison des salaires
+t_test_remote_salary <- t.test(remote_group$salary_in_usd, non_remote_group$salary_in_usd, alternative = "two.sided")
+
+# Résultats du test
+#t_test_remote_salary$p.value
+
+```
+---
+##Résultats
+
+- t = **`r t_test_remote_salary$statistic`**
+
+
+- p-value = **`r t_test_remote_salary$p.value`**
+  
+
+- Moyenne des salaires :
+
+
+- Télétravail : 145109.6 USD
+
+
+- Non télétravail : 152109.4 USD
+
+Le p-value étant très faible, nous rejetons l'hypothèse nulle. On a assez de preuves statistiques 
+pour conclure avec 5% de chances de se tromper qu'l y a une différence significative entre les salaires des employés en télétravail et ceux qui ne le sont pas.
+
+
+---
+
+###Hypothèse 3 : Dépendance du salaire vis-à-vis de la taille de l'entreprise
+####Test : Le salaire dépend-il de la taille de l'entreprise ?
+
+Nous avons utilisé le test du khi2 pour analyser si la taille de l'entreprise influence le salaire des employés.
+
+```{r hypo3, echo=FALSE}
+# Catégoriser les salaires en fonction des intervalles
+salary_groups <- cut(salaires$salary_in_usd, 
+                     breaks = c(0, 30000, 60000, 100000, Inf), 
+                     labels = c("Faible", "Moyen", "Élevé", "Très élevé"))
+
+# Créer une table de contingence entre la taille de l'entreprise et les groupes de salaire
+contingency_table <- table(salaires$company_size, salary_groups)
+
+# Test du Khi2
+chi2_test_salary_size <- chisq.test(contingency_table)
+
+# Résultats du test
+#chi2_test_salary_size
+
+```
+---
+##Résultats
+
+- Chi-squared = 853.68
+
+- p-value < 2.2e-16
+
+Le p-value est extrêmement faible, donc nous rejetons l'hypothèse nulle.  On a assez de preuves statistiques 
+pour conclure avec 5% de chances de se tromper qu'l existe une relation significative entre la taille de l'entreprise et le salaire des employés.
+
+
+
+```{r Calcul des correlations, echo=FALSE}
+# Calcul des corrélations
+#library(ggcorrplot)
+#cor_matrix <- cor(salaires %>% select(where(is.numeric)), use = "complete.obs")
+
+# Heatmap des corrélations
+#ggcorrplot(cor_matrix, lab = TRUE, colors = c("darkred", "white", "darkblue")) +
+#  labs(title = "Corrélations entre les variables")
+
+#Travail à distance et années d'expérience : Faible corrélation négative (-0.2), suggérant 
+#  moins de flexibilité en télétravail avec plus d'expérience.
+
+# Salaire en USD et salaire : Corrélation positive faible (0.13), indiquant une légère tendance à 
+#  ce que les salaires en USD plus élevés soient liés à des salaires plus élevés.
+
+# Autres corrélations : Faibles, montrant peu ou pas de relation significative entre 
+#  les autres variables
+
+
+```
